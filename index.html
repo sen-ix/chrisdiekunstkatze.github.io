@@ -97,6 +97,18 @@
 
     .header-right { color: #ddd; font-size: 12px; text-align: right; }
 
+    .menu-toggle {
+      display: none;
+      padding: 10px 14px;
+      border: 2px solid #000;
+      border-radius: 4px;
+      background: #0066cc;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 44px;
+    }
+
     .site-layout { display: flex; align-items: flex-start; min-height: calc(100vh - 100px); }
 
     nav {
@@ -126,6 +138,16 @@
       height: 2px; width: 0; background: #66b3ff; transition: width .2s ease;
     }
     nav a:hover::after { width: 100%; }
+
+    .nav-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .6);
+      z-index: 996;
+    }
+
+    body.nav-open .nav-overlay { display: block; }
 
     .content-area { flex: 1; min-width: 0; }
     #container { padding: 0 18px 20px; }
@@ -399,23 +421,67 @@
     footer a{ color:#9ed6ff !important; }
 
     @media (max-width: 900px) {
-      .site-layout { display: block; }
-      nav {
-        width: 100%; min-width: 100%; height: auto;
-        position: sticky; top: 0;
-        border-right: none; border-bottom: 3px solid #000;
-        display: flex; overflow-x: auto;
+      body.nav-open { overflow: hidden; }
+      .site-layout { display: block; min-height: auto; }
+
+      header {
+        gap: 12px;
+        padding: 14px;
       }
-      nav a { display: inline-block; min-width: 120px; border-bottom: none; border-right: 1px solid #444; }
+
+      .menu-toggle { display: inline-block; }
+
+      nav {
+        width: min(320px, 84vw);
+        min-width: min(320px, 84vw);
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+        border-right: 3px solid #000;
+        border-bottom: none;
+        display: block;
+        overflow-y: auto;
+        z-index: 997;
+      }
+
+      body.nav-open nav { transform: translateX(0); }
+
+      nav a {
+        display: block;
+        min-width: 0;
+        border-bottom: 1px solid #444;
+        border-right: none;
+        min-height: 48px;
+        padding: 14px 16px;
+      }
+
       .header-search { width: 100%; }
       .header-search input { width: 100%; }
+      .header-right { width: 100%; text-align: left; }
+
+      #container { padding: 0 12px 16px; }
+      marquee { margin: 12px; padding: 10px; }
+
+      .trending-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .instagram-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 480px) {
-      header h1 { font-size: 22px; }
+      .logo { height: 44px; }
+      header h1 { font-size: 20px; min-width: 0; }
+      .page-header h1 { font-size: 26px; }
       .welcome-card-header { flex-direction: column; gap: 8px; align-items: flex-start; }
       .quick-actions { flex-direction: column; }
       .quick-action-btn { width: 100%; text-align: center; }
+      .trending-grid { grid-template-columns: 1fr; }
+      .back-to-top { width: 42px; height: 42px; right: 12px; bottom: 12px; }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .ps-particle { display: none !important; }
     }
 
     @media print {
@@ -430,6 +496,7 @@
   <header>
     <img src="Assets/Image/cdkk_svg_blue.png" alt="CDKK Logo" class="logo" />
     <h1>CDKK Network - Chris Die KunstKatze</h1>
+    <button type="button" class="menu-toggle" id="menuToggle" aria-controls="mainNav" aria-expanded="false">MENU</button>
     <div class="header-search">
       <input type="text" placeholder="Quick search..." aria-label="Quick search the site" />
       <button type="button">🔍</button>
@@ -439,8 +506,10 @@
     </div>
   </header>
 
+  <div class="nav-overlay" id="navOverlay" aria-hidden="true"></div>
+
   <div class="site-layout">
-    <nav role="navigation" aria-label="Main navigation">
+    <nav role="navigation" aria-label="Main navigation" id="mainNav">
       <a href="index.html" class="active">HOME</a>
       <a href="#about">ABOUT</a>
       <a href="downloads.html">DOWNLOADS</a>
@@ -620,6 +689,37 @@
         categoryPills.forEach((p) => p.classList.remove("active"));
         this.classList.add("active");
       });
+    });
+
+    const menuToggle = document.getElementById("menuToggle");
+    const mainNav = document.getElementById("mainNav");
+    const navOverlay = document.getElementById("navOverlay");
+
+    function closeNav() {
+      document.body.classList.remove("nav-open");
+      menuToggle.setAttribute("aria-expanded", "false");
+    }
+
+    function toggleNav() {
+      const isOpen = document.body.classList.toggle("nav-open");
+      menuToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    }
+
+    menuToggle.addEventListener("click", toggleNav);
+    navOverlay.addEventListener("click", closeNav);
+
+    mainNav.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => {
+        if (window.matchMedia("(max-width: 900px)").matches) closeNav();
+      });
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeNav();
+    });
+
+    window.addEventListener("resize", () => {
+      if (!window.matchMedia("(max-width: 900px)").matches) closeNav();
     });
   </script>
 
